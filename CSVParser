@@ -1,0 +1,20 @@
+package DirectoryParser;
+
+import java.io.FileReader;
+import java.util.List;
+
+import au.com.bytecode.opencsv.CSVReader;
+
+public class CSVParser {
+  private List<String[]> csv;
+	
+	public void set(String path) throws Exception{
+			CSVReader reader = new CSVReader(new FileReader(path));
+			csv = reader.readAll();
+	}
+
+	public List<String[]> get() {
+		return csv;
+	}
+
+}
