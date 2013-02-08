@@ -1,0 +1,76 @@
+package DirectoryParser;
+
+import java.io.FileWriter;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.htmlparser.Parser;
+import org.htmlparser.filters.HasAttributeFilter;
+import org.htmlparser.filters.TagNameFilter;
+import org.htmlparser.util.NodeList;
+
+import au.com.bytecode.opencsv.CSVWriter;
+
+
+public class DirectoryParser {
+
+
+
+  public static void main(String[] args) throws Exception {
+		CSVParser csv = new CSVParser();
+		csv.set("my.csv");
+		List<String[]> nameList = csv.get();
+
+		List<Person> listOfPerson = new ArrayList<Person>();
+		int i = 0;
+		for (String[] s : nameList) {
+			if (i<5000) {
+				String name = s[0];
+				String salary = s[1];
+				String expenses = s[2];
+				listOfPerson.add(makePerson(name,salary,expenses));
+				System.out.println(i);
+				i++;
+			}
+		}
+
+		CSVWriter writer = new CSVWriter(new FileWriter("out.csv"), '\t');
+
+		for (Person p : listOfPerson) {
+			String entry = p.getName()+"#"+p.getPosition()+"#"+p.getDepartment()+"#"+p.getLocation()+"#"+p.getSalary()+"#"+p.getExpenses()+"#";
+			String[] entries = entry.split("#");
+			writer.writeNext(entries);
+		}
+		writer.close();
+	}
+
+
+
+	public static Person makePerson(String n, String salary, String expenses) throws Exception {
+		String start = "https://www.directory.ubc.ca/index.cfm?page=processStaffAdvance";
+		String name = "&keywords=" + n;
+		String end = "&andorexactkeywords=start";
+		String myURL = start + name + end;
+
+		Parser locationParser = new Parser(myURL);
+		Parser departmentParser = new Parser(myURL);
+
+
+		HasAttributeFilter locFilter = new HasAttributeFilter("width", "35%");
+		NodeList locations = locationParser.parse(locFilter);
+		TagNameFilter tdFilter = new TagNameFilter("td");
+		NodeList loc = locations.extractAllNodesThatMatch(tdFilter, true);
+
+		HasAttributeFilter departmentFilter = new HasAttributeFilter("width", "25%");
+		NodeList departments = departmentParser.parse(departmentFilter);
+		NodeList dept = departments.extractAllNodesThatMatch(tdFilter, true);
+
+		String location = loc.toHtml().trim();
+		String department = dept.toHtml().trim();
+
+		Person person = new Person(n,location,department,salary,expenses);
+
+		return person;
+
+	}
+}
